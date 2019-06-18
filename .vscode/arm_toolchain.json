@@ -1,0 +1,47 @@
+{
+  "build_select": "configuration name",
+  "configurations": [
+    {
+      "name": "configuration name",
+      "prj_name": "project_name",
+      "loader_path": "",
+      "c_include_paths": [
+        ""
+      ],
+      "a_include_paths": [
+        "Wa,--warn"
+      ],
+      "c_source_paths": [
+        ""
+      ],
+      "general_flags": [
+        "mcpu=cortex-m0"
+      ],
+      "a_output_flags": [
+        ""
+      ],
+      "c_output_flags": [
+        "Og",
+        "std=gnu11"
+      ],
+      "l_output_flags": [
+        "Wl,--defsym=malloc_getpagesize_P=0x100"
+      ],
+      "a_defines": [
+        ""
+      ],
+      "c_defines": [
+        ""
+      ],
+      "l_library": [
+        ""
+      ],
+      "exclude_paths": [
+        ""
+      ],
+      "exclude_files": [
+        ""
+      ]
+    }
+  ]
+}
