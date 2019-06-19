@@ -12,4 +12,4 @@ Right click an select Project Settings UI
 
 ctrl+shift+B for to build, 
 
-ctrl+b for ti incrementale build
+ctrl+b for to incremental build
