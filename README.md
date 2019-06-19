@@ -9,3 +9,6 @@ Note: For Now only cortex M, working with linux or with bash shell.
 Right click Project Settings UI
 
 ![Project Settings](ps.png)
+
+ctrl+shift+B BUILD CLEAN
+ctrl+b build
