@@ -39,9 +39,9 @@ function activate(context) {
         }, {
             enableScripts: true,
         });
-        const filePath = vscode.Uri.file(path.join(context.extensionPath, 'src', 'ui', 'ui.html'));
-        vscode.window.showInformationMessage(filePath.toString());
-        panel.webview.html = fs.readFileSync(filePath.fsPath, 'utf8');
+        const filePath = vscode.Uri.file(path.join(context.extensionPath, 'out', 'ui', 'ui.html'));
+        var page = fs.readFileSync(filePath.fsPath, 'utf8');
+        panel.webview.html = page.replace(/{{root}}/g, vscode.Uri.file(context.extensionPath).with({ scheme: 'vscode-resource' }).toString());
         // Handle messages from the webview
         panel.webview.onDidReceiveMessage(message => {
             switch (message.command) {

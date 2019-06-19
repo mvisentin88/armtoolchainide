@@ -13,12 +13,12 @@ class GCC {
                     prj_name: "project_name",
                     loader_path: "",
                     c_include_paths: [""],
-                    a_include_paths: ["Wa,--warn"],
+                    a_include_paths: [""],
                     c_source_paths: [""],
                     general_flags: ["mcpu=cortex-m0"],
-                    a_output_flags: [""],
+                    a_output_flags: ["Wa,--warn"],
                     c_output_flags: ["Og", "std=gnu11"],
-                    l_output_flags: ["Wl,--defsym=malloc_getpagesize_P=0x100"],
+                    l_output_flags: ["Wl,--defsym=malloc_getpagesize_P=0x1000"],
                     a_defines: [""],
                     c_defines: [""],
                     l_library: [""],
@@ -114,10 +114,18 @@ class GCC {
         }
         this.append_cmd("#!/bin/bash");
         this.append_cmd("START_TIME=$(($(date +%s)))");
-        this.target_folder = "./" + path.parse(this.file_conf.configurations[build_selected].name.toString()).base;
+        this.target_folder = "";
+        if (vscode.workspace.rootPath != undefined) {
+            this.target_folder = vscode.Uri.file(path.join(vscode.workspace.rootPath, this.file_conf.configurations[build_selected].name.toString())).fsPath.toString();
+        }
         var prj_name = this.file_conf.configurations[build_selected].prj_name;
         var loader_file = this.file_conf.configurations[build_selected].loader_path;
         this.flags = this.concat_arr_string(this.file_conf.configurations[build_selected].general_flags, "-");
+        if (clean == true) {
+            if (fs.existsSync(this.target_folder) == true) {
+                require('fs-extra').removeSync(this.target_folder);
+            }
+        }
         if (this.file_conf.configurations[build_selected].c_source_paths.length == 0) {
             this.append_cmd("echo error: echo No Sources");
         }
@@ -139,8 +147,8 @@ class GCC {
         this.append_cmd("arm-none-eabi-size " + this.target_folder + "/" + prj_name + ".elf");
         this.append_cmd("END_TIME=$(($(date +%s)))");
         this.append_cmd("echo Build Time : $(($END_TIME - $START_TIME)) s");
-        fs.writeFileSync(vscode.workspace.rootPath + "/" + this.target_folder + "/compile.sh", this.bash_cmd);
-        let task = new vscode.Task({ type: 'shell', task: 'compile' }, 'compile', 'shell', new vscode.ShellExecution('bash ' + vscode.workspace.rootPath + "/" + this.target_folder + "/compile.sh"), "$gcc");
+        fs.writeFileSync(this.target_folder + "/compile.sh", this.bash_cmd);
+        let task = new vscode.Task({ type: 'shell', task: 'compile' }, 'compile', 'shell', new vscode.ShellExecution('bash ' + this.target_folder + "/compile.sh"), "$gcc");
         task.presentationOptions.clear = true;
         vscode.tasks.executeTask(task);
         return;
@@ -159,7 +167,7 @@ class GCC {
             if (uri.isDirectory()) {
                 this.compile_file(url + "/" + item, clean, build_selected);
             }
-            let target_url = url + "/" + this.target_folder + "/" + relative_path;
+            let target_url = this.target_folder + "/" + relative_path;
             /** compile */
             this.input = url + "/" + item;
             this.output = target_url + "/" + path.parse(this.input).name + ".o";
@@ -182,7 +190,7 @@ class GCC {
             if (this.file_conf.configurations[build_selected].exclude_files.find(exclude_dir => path.parse(exclude_dir).base === item)) {
                 continue;
             }
-            if (!fs.existsSync(target_url)) {
+            if (fs.existsSync(target_url) == false) {
                 require('fs-extra').mkdirpSync(target_url);
             }
             var input_date = fs.statSync(this.input).birthtimeMs;

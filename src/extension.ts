@@ -37,6 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		toolchain.addExcludePath(vscode.workspace.asRelativePath(uri));
 	});
+	
 	disposable = vscode.commands.registerCommand('arm.project-settings', () => {
 
 		const panel = vscode.window.createWebviewPanel(
@@ -51,9 +52,10 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 		);
-		const filePath: vscode.Uri = vscode.Uri.file(path.join(context.extensionPath, 'src', 'ui', 'ui.html'));
-		vscode.window.showInformationMessage(filePath.toString());
-		panel.webview.html = fs.readFileSync(filePath.fsPath, 'utf8');
+		const filePath: vscode.Uri = vscode.Uri.file(path.join(context.extensionPath, 'out', 'ui', 'ui.html'));
+		
+		var page = fs.readFileSync(filePath.fsPath, 'utf8');
+		panel.webview.html = page.replace(/{{root}}/g,vscode.Uri.file(context.extensionPath).with({scheme:'vscode-resource'}).toString());
 
 		// Handle messages from the webview
 		panel.webview.onDidReceiveMessage(
