@@ -125,9 +125,15 @@ class GCC {
             if (fs.existsSync(this.target_folder) == true) {
                 require('fs-extra').removeSync(this.target_folder);
             }
+            require('fs-extra').mkdirpSync(this.target_folder);
         }
         if (this.file_conf.configurations[build_selected].c_source_paths.length == 0) {
-            this.append_cmd("echo error: echo No Sources");
+            this.append_cmd("echo error: No Sources");
+            fs.writeFileSync(this.target_folder + "/compile.sh", this.bash_cmd);
+            let task = new vscode.Task({ type: 'shell', task: 'compile' }, 'compile', 'shell', new vscode.ShellExecution('bash ' + this.target_folder + "/compile.sh"), "$gcc");
+            task.presentationOptions.clear = true;
+            vscode.tasks.executeTask(task);
+            return;
         }
         else {
             for (let source_dir of this.file_conf.configurations[build_selected].c_source_paths) {
@@ -330,6 +336,20 @@ class GCC {
             this.file_conf.configurations[build_selected].exclude_files.push(dir);
         }
         fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
+        this.UpdateExcludeView(dir, true);
+    }
+    UpdateExcludeView(dir, visibility) {
+        //add to exclude
+        if (vscode.workspace.rootPath != undefined) {
+            var settingsFile = path.join(vscode.workspace.rootPath, '.vscode/settings.json');
+            // modifiy visibility of boolean type file exclusions
+            let settings = JSON.parse(fs.readFileSync(settingsFile).toString());
+            if (settings['files.exclude']) {
+                settings['files.exclude'][dir] = visibility;
+                // write the updated settings to file
+                fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
+            }
+        }
     }
 }
 exports.GCC = GCC;

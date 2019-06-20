@@ -1,69 +1,32 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-
-
-type toolchain_conf = {
-    name: string,
-    prj_name: string,
-    loader_path: string,
-    c_include_paths: string[],
-    a_include_paths: string[],
-    c_source_paths: string[],
-    general_flags: string[],
-    a_output_flags: string[],
-    c_output_flags: string[],
-    l_output_flags: string[],
-    a_defines: string[],
-    c_defines: string[],
-    l_library: string[],
-    exclude_paths: string[],
-    exclude_files: string[],
-};
-
-type json_file_conf = {
-    configurations: toolchain_conf[]
-    build_select: string
-};
-
-export class GCC {
-
-    file_conf: json_file_conf = {
-        build_select: "configuration name",
-        configurations: [
-            {
-                name: "configuration name",
-                prj_name: "project_name",
-                loader_path: "",
-                c_include_paths: [""],
-                a_include_paths: [""],
-                c_source_paths: [""],
-                general_flags: ["mcpu=cortex-m0"],
-                a_output_flags: ["Wa,--warn"],
-                c_output_flags: ["Og", "std=gnu11"],
-                l_output_flags: ["Wl,--defsym=malloc_getpagesize_P=0x1000"],
-                a_defines: [""],
-                c_defines: [""],
-                l_library: [""],
-                exclude_paths: [""],
-                exclude_files: [""]
-            }
-        ]
-    };
-    target_folder: string;
-    bash_cmd: string;
-    compiled_file: string;
-    flags: string;
-    output_flags: string;
-    defines: string;
-    include_paths: string;
-    input: string;
-    output: string;
-    to_be_build: boolean;
-    build_configuration: string[];
-    sb_current_build: vscode.StatusBarItem;
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const vscode = require("vscode");
+const path = require("path");
+const fs = require("fs");
+class GCC {
     constructor() {
+        this.file_conf = {
+            build_select: "configuration name",
+            configurations: [
+                {
+                    name: "configuration name",
+                    prj_name: "project_name",
+                    loader_path: "",
+                    c_include_paths: [""],
+                    a_include_paths: [""],
+                    c_source_paths: [""],
+                    general_flags: ["mcpu=cortex-m0"],
+                    a_output_flags: ["Wa,--warn"],
+                    c_output_flags: ["Og", "std=gnu11"],
+                    l_output_flags: ["Wl,--defsym=malloc_getpagesize_P=0x1000"],
+                    a_defines: [""],
+                    c_defines: [""],
+                    l_library: [""],
+                    exclude_paths: [""],
+                    exclude_files: [""]
+                }
+            ]
+        };
         this.target_folder = "";
         this.bash_cmd = "";
         this.compiled_file = "";
@@ -75,19 +38,14 @@ export class GCC {
         this.output = "";
         this.to_be_build = false;
         this.build_configuration = [];
-
         if (!fs.existsSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json")) {
             fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
         }
-
         var valid = this.popolate_configuration(fs.readFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", 'utf8').toString());
-
         if (!valid) {
             vscode.window.showErrorMessage("JSON FILE not valid");
         }
-
         this.init_current_build();
-
         this.sb_current_build = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
         this.sb_current_build.text = this.file_conf.build_select.toString();
         const build_choose_cmd_id = 'build.choose';
@@ -103,36 +61,29 @@ export class GCC {
                             console.log(err);
                             return;
                         }
-                    })
+                    });
                 }
             });
-        })
+        });
         this.sb_current_build.command = build_choose_cmd_id;
         this.sb_current_build.show();
     }
-
     init_current_build() {
         var valid = this.file_conf.configurations.find(item => item.name === this.file_conf.build_select);
-
         if (!valid) {
             this.file_conf.build_select = this.file_conf.configurations[0].name;
-
             fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
         }
     }
-
-    update_data(data: any) {
-
+    update_data(data) {
         var new_json = JSON.parse(data);
         var build_select_change = 1;
-
         for (var i = 0; i < new_json.configurations.length; i++) {
             if (this.file_conf.build_select === new_json.configurations[i].name) {
                 build_select_change = 0;
                 break;
             }
         }
-
         new_json.build_select = new_json.configurations[0].name;
         if (build_select_change) {
             for (var i = 0; i < new_json.configurations.length; i++) {
@@ -143,15 +94,11 @@ export class GCC {
                 }
             }
         }
-
         this.file_conf = new_json;
-
         fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
     }
-    build(settings: string, clean: boolean) {
-
+    build(settings, clean) {
         var valid = this.popolate_configuration(settings);
-
         if (!valid) {
             vscode.window.showInformationMessage("config file error");
             return;
@@ -165,36 +112,22 @@ export class GCC {
                 build_selected = i;
             }
         }
-
-
         this.append_cmd("#!/bin/bash");
         this.append_cmd("START_TIME=$(($(date +%s)))");
-
         this.target_folder = "";
-
         if (vscode.workspace.rootPath != undefined) {
             this.target_folder = vscode.Uri.file(path.join(vscode.workspace.rootPath, this.file_conf.configurations[build_selected].name.toString())).fsPath.toString();
         }
-
         var prj_name = this.file_conf.configurations[build_selected].prj_name;
         var loader_file = this.file_conf.configurations[build_selected].loader_path;
         this.flags = this.concat_arr_string(this.file_conf.configurations[build_selected].general_flags, "-");
-
         if (clean == true) {
             if (fs.existsSync(this.target_folder) == true) {
                 require('fs-extra').removeSync(this.target_folder);
             }
-            require('fs-extra').mkdirpSync(this.target_folder);
         }
-
         if (this.file_conf.configurations[build_selected].c_source_paths.length == 0) {
-            this.append_cmd("echo error: No Sources");
-
-            fs.writeFileSync(this.target_folder + "/compile.sh", this.bash_cmd);
-            let task = new vscode.Task({ type: 'shell', task: 'compile' }, 'compile', 'shell', new vscode.ShellExecution('bash ' + this.target_folder + "/compile.sh"), "$gcc");
-            task.presentationOptions.clear = true;
-            vscode.tasks.executeTask(task);
-            return;
+            this.append_cmd("echo error: echo No Sources");
         }
         else {
             for (let source_dir of this.file_conf.configurations[build_selected].c_source_paths) {
@@ -202,51 +135,38 @@ export class GCC {
                 this.compile_file(dir, clean, build_selected);
             }
         }
-
         this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].l_output_flags, "-");
         this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].l_library, "-L");
-
         var linker_cmd = this.generate_cmd("arm-none-eabi-gcc -o ", this.target_folder + "/" + prj_name + ".elf", this.compiled_file, this.flags, "-T" + loader_file, "-Wl,-Map=" + this.target_folder + "/" + prj_name + ".map", this.output_flags);
-
         if (this.to_be_build || clean) {
             this.append_cmd(linker_cmd);
             this.append_cmd("echo Generate bin..");
             this.append_cmd("arm-none-eabi-objcopy -S -O binary " + this.target_folder + "/" + prj_name + ".elf " + this.target_folder + "/" + prj_name + ".bin");
         }
-        this.append_cmd("echo Print size info..")
+        this.append_cmd("echo Print size info..");
         this.append_cmd("arm-none-eabi-size " + this.target_folder + "/" + prj_name + ".elf");
         this.append_cmd("END_TIME=$(($(date +%s)))");
         this.append_cmd("echo Build Time : $(($END_TIME - $START_TIME)) s");
-
         fs.writeFileSync(this.target_folder + "/compile.sh", this.bash_cmd);
         let task = new vscode.Task({ type: 'shell', task: 'compile' }, 'compile', 'shell', new vscode.ShellExecution('bash ' + this.target_folder + "/compile.sh"), "$gcc");
         task.presentationOptions.clear = true;
         vscode.tasks.executeTask(task);
-
         return;
-
     }
-
-    compile_file(url: string, clean: boolean, build_selected: any): any {
+    compile_file(url, clean, build_selected) {
         var uris = fs.readdirSync(url);
-
         var filter = uris.filter((string) => {
             return string[0].localeCompare(".");
-        })
-
+        });
         for (let item of filter) {
             var uri = fs.statSync(url + "/" + item);
             let relative_path = url.split(vscode.workspace.rootPath + "/")[1];
-
             if (this.file_conf.configurations[build_selected].exclude_paths.find(exclude_dir => exclude_dir === relative_path)) {
                 continue;
             }
-
             if (uri.isDirectory()) {
-
                 this.compile_file(url + "/" + item, clean, build_selected);
             }
-
             let target_url = this.target_folder + "/" + relative_path;
             /** compile */
             this.input = url + "/" + item;
@@ -267,45 +187,32 @@ export class GCC {
             else {
                 continue;
             }
-
             if (this.file_conf.configurations[build_selected].exclude_files.find(exclude_dir => path.parse(exclude_dir).base === item)) {
                 continue;
             }
-
             if (fs.existsSync(target_url) == false) {
                 require('fs-extra').mkdirpSync(target_url);
             }
-
-
             var input_date = fs.statSync(this.input).birthtimeMs;
             var output_date = 0;
-
             if (fs.existsSync(this.output)) {
                 output_date = fs.statSync(this.output).birthtimeMs;
             }
             if (input_date > output_date || clean) {
                 this.append_cmd("echo " + relative_path + "/" + path.parse(this.input).base);
                 this.append_cmd(cmd);
-
                 this.to_be_build = true;
             }
-
             this.compiled_file = this.compiled_file + " " + this.output;
-
         }
-
         return;
-
     }
-
-    popolate_configuration(settings: string): boolean {
+    popolate_configuration(settings) {
         var json_tmp = JSON.parse(settings);
-
         if (json_tmp.build_select == undefined) {
             vscode.window.showInformationMessage("no 'build_select' field");
             return false;
         }
-
         if (json_tmp.configurations == undefined) {
             vscode.window.showInformationMessage("no 'configurations' field");
             return false;
@@ -365,87 +272,65 @@ export class GCC {
             }
             this.build_configuration[i] = json_tmp.configurations[i].name;
         }
-
         this.file_conf = json_tmp;
         /** extraxt function name */
         return true;
     }
-
-    append_cmd(cmd: string) {
+    append_cmd(cmd) {
         this.bash_cmd = this.bash_cmd + cmd + "\n";
     }
-
-    concat_arr_string(array: string[], prefix?: string, suffix?: string): string {
+    concat_arr_string(array, prefix, suffix) {
         var return_string = "";
-
-        if (prefix == undefined) prefix = "";
-        if (suffix == undefined) suffix = " ";
-
+        if (prefix == undefined)
+            prefix = "";
+        if (suffix == undefined)
+            suffix = " ";
         for (let item of array) {
             return_string = return_string + prefix + item + suffix;
         }
         return return_string;
     }
-
-    generate_cmd(cmd: string, arg1?: string, arg2?: string, arg3?: string, arg4?: string, arg5?: string, arg6?: string, arg7?: string): string {
+    generate_cmd(cmd, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
         var gemerate_cmd = "";
-
-        if (arg1 == undefined) arg1 = "";
-        if (arg2 == undefined) arg2 = "";
-        if (arg3 == undefined) arg3 = "";
-        if (arg4 == undefined) arg4 = "";
-        if (arg5 == undefined) arg5 = "";
-        if (arg6 == undefined) arg6 = "";
-        if (arg7 == undefined) arg7 = "";
-
+        if (arg1 == undefined)
+            arg1 = "";
+        if (arg2 == undefined)
+            arg2 = "";
+        if (arg3 == undefined)
+            arg3 = "";
+        if (arg4 == undefined)
+            arg4 = "";
+        if (arg5 == undefined)
+            arg5 = "";
+        if (arg6 == undefined)
+            arg6 = "";
+        if (arg7 == undefined)
+            arg7 = "";
         gemerate_cmd = cmd + " " + arg1 + " " + arg2 + " " + arg3 + " " + arg4 + " " + arg5 + " " + arg6 + " " + arg7;
-
         return gemerate_cmd;
     }
-
-    getData(): string {
-
+    getData() {
         var valid = this.popolate_configuration(fs.readFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", 'utf8').toString());
-
         if (!valid) {
             vscode.window.showErrorMessage("JSON FILE not valid");
         }
-
         return JSON.stringify(this.file_conf);
     }
-
-    addExcludePath(dir: string) {
+    addExcludePath(dir) {
         var build_selected = 0;
         for (var i = 0; i < this.build_configuration.length; i++) {
             if (this.file_conf.build_select === this.file_conf.configurations[i].name) {
                 build_selected = i;
             }
         }
-
         if (path.parse(dir).ext === "") {
             this.file_conf.configurations[build_selected].exclude_paths.push(dir);
         }
         else {
             this.file_conf.configurations[build_selected].exclude_files.push(dir);
         }
-
         fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
-
-        this.UpdateExcludeView(dir, true);
-    }
-
-    UpdateExcludeView(dir: string, visibility: boolean) {
-        //add to exclude
-        if (vscode.workspace.rootPath != undefined) {
-            var settingsFile = path.join(vscode.workspace.rootPath, '.vscode/settings.json');
-
-            // modifiy visibility of boolean type file exclusions
-            let settings = JSON.parse(fs.readFileSync(settingsFile).toString());
-            if (settings['files.exclude']) {
-                settings['files.exclude'][dir] = visibility;
-                // write the updated settings to file
-                fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
-            }
-        }
     }
 }
+exports.GCC = GCC;
+//# sourceMappingURL=gcc.js.map

@@ -2,8 +2,9 @@
 	"name": "arm-toolchain",
 	"displayName": "arm toolchain",
 	"description": "this is a simple toolchain for compile with personal gcc",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"publisher": "mvisentin",
+	"icon": "logo.png",
 	"engines": {
 		"vscode": "^1.34.0"
 	},
