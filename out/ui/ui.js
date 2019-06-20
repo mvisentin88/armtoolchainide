@@ -194,6 +194,11 @@ class UI{
                 elemen =  document.getElementById('library-list');
                 elemen.selectedIndex = elemen.options['library-nano'].index;
             }
+            else if(options[item].toString().localeCompare('specs=nosys.specs') == 0)
+            {
+                elemen =  document.getElementById('library-list');
+                elemen.selectedIndex = elemen.options['library-standard'].index;
+            }
             else if(options[item].toString().localeCompare('mthumb') == 0)
             {
                 elemen =  document.getElementById('instruction-set');
@@ -257,10 +262,8 @@ class UI{
     {
         var element = document.getElementById(id);
         element.textContent="";
-        console.log(items);
         for(var idx in items)
         {
-            console.log("idx: "+ idx);
             element.textContent = element.textContent  + items[idx] + "\n";
         }
     }
@@ -504,7 +507,7 @@ class UI{
     {
         var index = document.getElementById(id).selectedIndex;
         var elem = document.getElementById(id).options;
-
+        console.log(elem[index].getAttribute('flags-value'));
         if(elem[index].getAttribute('flags-value').localeCompare('') !=0)
         {
             obj.push(elem[index].getAttribute('flags-value'));

@@ -38,7 +38,7 @@ export class GCC {
                 c_include_paths: [""],
                 a_include_paths: [""],
                 c_source_paths: [""],
-                general_flags: ["mcpu=cortex-m0"],
+                general_flags: ["mcpu=cortex-m0","specs=nosys.specs"],
                 a_output_flags: ["Wa,--warn"],
                 c_output_flags: ["Og", "std=gnu11"],
                 l_output_flags: ["Wl,--defsym=malloc_getpagesize_P=0x1000"],
