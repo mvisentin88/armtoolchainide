@@ -6,8 +6,10 @@ This is a basic ARM toolchain IDE with a simply UI for to config your Projects.
 
 Note: For Now only cortex M, working with linux or with bash shell. 
 
-Right click Project Settings UI
+Right click an select Project Settings UI
 
 ![Project Settings](ps.png)
 
-KeyBinds : CTRL+SHIFT+B build and clean, CTRL + B build
+ctrl+shift+B for to build, 
+
+ctrl+b for to incremental build
