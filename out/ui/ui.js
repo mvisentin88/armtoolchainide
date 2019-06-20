@@ -136,7 +136,7 @@ class UI{
         this.assembler_output_flags(configurations.a_output_flags);
         this.fill_text_area('compiler-include-path',configurations.c_include_paths);
         this.fill_text_area('compiler-defines',configurations.c_defines);
-        this.fill_text_area('compiler-source-path',configurations.c_source_path);
+        this.fill_text_area('compiler-source-path',configurations.c_source_paths);
         this.compiler_output_flags(configurations.c_output_flags);
         this.fill_text_area('linker-library',configurations.l_library);
         this.fill_text('linker-script',configurations.loader_path);
@@ -257,8 +257,10 @@ class UI{
     {
         var element = document.getElementById(id);
         element.textContent="";
+        console.log(items);
         for(var idx in items)
         {
+            console.log("idx: "+ idx);
             element.textContent = element.textContent  + items[idx] + "\n";
         }
     }

@@ -67,6 +67,7 @@ class GCC {
         });
         this.sb_current_build.command = build_choose_cmd_id;
         this.sb_current_build.show();
+        this.RefreshExcludeView();
     }
     init_current_build() {
         var valid = this.file_conf.configurations.find(item => item.name === this.file_conf.build_select);
@@ -96,6 +97,15 @@ class GCC {
         }
         this.file_conf = new_json;
         fs.writeFileSync(vscode.workspace.rootPath + "/.vscode/arm_toolchain.json", JSON.stringify(this.file_conf, null, 2));
+        this.RefreshExcludeView();
+    }
+    refresh(data) {
+        var valid = this.popolate_configuration(data);
+        if (!valid) {
+            vscode.window.showInformationMessage("config file error");
+            return;
+        }
+        this.RefreshExcludeView();
     }
     build(settings, clean) {
         var valid = this.popolate_configuration(settings);
@@ -349,6 +359,43 @@ class GCC {
                 // write the updated settings to file
                 fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
             }
+        }
+    }
+    RefreshExcludeView() {
+        if (vscode.workspace.rootPath != undefined) {
+            var settingsFile = path.join(vscode.workspace.rootPath, '.vscode/settings.json');
+            // modifiy visibility of boolean type file exclusions
+            let settings = JSON.parse(fs.readFileSync(settingsFile).toString());
+            var build_selected = 0;
+            for (var i = 0; i < this.build_configuration.length; i++) {
+                if (this.file_conf.build_select === this.file_conf.configurations[i].name) {
+                    build_selected = i;
+                }
+            }
+            for (var item in settings['files.exclude']) {
+                if (item.startsWith(".") || item.startsWith("*")) {
+                    continue;
+                }
+                if (vscode.workspace.rootPath != undefined) {
+                    let item_abs = vscode.Uri.file(path.join(vscode.workspace.rootPath, item)).fsPath.toString();
+                    //relative directory
+                    for (var src in this.file_conf.configurations[build_selected].c_source_paths) {
+                        var src_string = vscode.Uri.file(path.join(vscode.workspace.rootPath, this.file_conf.configurations[build_selected].c_source_paths[src])).fsPath.toString();
+                        if (item_abs.includes(src_string)) {
+                            delete settings['files.exclude'][item];
+                        }
+                    }
+                }
+            }
+            for (var exc_idx in this.file_conf.configurations[build_selected].exclude_paths) {
+                var exc = this.file_conf.configurations[build_selected].exclude_paths[exc_idx];
+                settings['files.exclude'][exc] = true;
+            }
+            for (var exc_idx in this.file_conf.configurations[build_selected].exclude_files) {
+                var exc = this.file_conf.configurations[build_selected].exclude_files[exc_idx];
+                settings['files.exclude'][exc] = true;
+            }
+            fs.writeFileSync(settingsFile, JSON.stringify(settings, null, 2));
         }
     }
 }

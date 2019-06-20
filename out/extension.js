@@ -54,6 +54,11 @@ function activate(context) {
             }
         });
     });
+    vscode.workspace.onDidSaveTextDocument((file) => {
+        if (path.parse(file.fileName).base === 'arm_toolchain.json') {
+            toolchain.refresh(fs.readFileSync(folder + "/.vscode/arm_toolchain.json", 'utf8').toString());
+        }
+    });
     context.subscriptions.push(disposable);
 }
 exports.activate = activate;
