@@ -16,7 +16,8 @@ const default_configuration= {
         c_defines: [""],
         l_library: [""],
         exclude_paths: [""],
-        exclude_files: [""]
+        exclude_files: [""],
+        toolchain_path: ""
 };
 
 
@@ -114,7 +115,7 @@ class UI{
         json.configurations[selected].a_output_flags = this.get_assembler_ouput_flags();
         json.configurations[selected].c_output_flags = this.get_compiler_output_flags();
         json.configurations[selected].l_output_flags = this.get_linker_output_flags();
-
+        json.configurations[selected].toolchain_path = this.get_item('toolchain-path');
         vscode.postMessage({
             command: 'update-data',
             data: JSON.stringify(json)
@@ -141,6 +142,7 @@ class UI{
         this.fill_text_area('linker-library',configurations.l_library);
         this.fill_text('linker-script',configurations.loader_path);
         this.linker_output_flags(configurations.l_output_flags);
+        this.fill_text('toolchain-path',configurations.toolchain_path);
     }
 
     refresh_configuration_list(name)

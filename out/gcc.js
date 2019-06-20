@@ -6,10 +6,10 @@ const fs = require("fs");
 class GCC {
     constructor() {
         this.file_conf = {
-            build_select: "configuration name",
+            build_select: "configuration_name",
             configurations: [
                 {
-                    name: "configuration name",
+                    name: "configuration_name",
                     prj_name: "project_name",
                     loader_path: "",
                     c_include_paths: [""],
@@ -23,7 +23,8 @@ class GCC {
                     c_defines: [""],
                     l_library: [""],
                     exclude_paths: [""],
-                    exclude_files: [""]
+                    exclude_files: [""],
+                    toolchain_path: "",
                 }
             ]
         };
@@ -153,7 +154,7 @@ class GCC {
         }
         this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].l_output_flags, "-");
         this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].l_library, "-L");
-        var linker_cmd = this.generate_cmd("arm-none-eabi-gcc -o ", this.target_folder + "/" + prj_name + ".elf", this.compiled_file, this.flags, "-T" + loader_file, "-Wl,-Map=" + this.target_folder + "/" + prj_name + ".map", this.output_flags);
+        var linker_cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -o ", this.target_folder + "/" + prj_name + ".elf", this.compiled_file, this.flags, "-T" + loader_file, "-Wl,-Map=" + this.target_folder + "/" + prj_name + ".map", this.output_flags);
         if (this.to_be_build || clean) {
             this.append_cmd(linker_cmd);
             this.append_cmd("echo Generate bin..");
@@ -192,13 +193,13 @@ class GCC {
                 this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].c_output_flags, "-");
                 this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].c_defines, "-D");
                 this.include_paths = this.concat_arr_string(this.file_conf.configurations[build_selected].c_include_paths, "-I");
-                cmd = this.generate_cmd("arm-none-eabi-gcc -c ", this.input, this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output);
+                cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -c ", this.input, this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output);
             }
             else if (path.parse(item).ext === ".s") {
                 this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].a_output_flags, "-");
                 this.include_paths = this.concat_arr_string(this.file_conf.configurations[build_selected].a_include_paths, "-I");
                 this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].a_defines, "-D");
-                cmd = this.generate_cmd("arm-none-eabi-gcc -c ", this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output, this.input);
+                cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -c ", this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output, this.input);
             }
             else {
                 continue;
