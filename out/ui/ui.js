@@ -116,6 +116,9 @@ class UI{
         json.configurations[selected].c_output_flags = this.get_compiler_output_flags();
         json.configurations[selected].l_output_flags = this.get_linker_output_flags();
         json.configurations[selected].toolchain_path = this.get_item('toolchain-path');
+        json.configurations[selected].bin_gcc = this.get_item('toolchain-gcc');
+        json.configurations[selected].bin_objcpy = this.get_item('toolchain-objcpy');
+        json.configurations[selected].bin_size = this.get_item('toolchain-size');
         vscode.postMessage({
             command: 'update-data',
             data: JSON.stringify(json)
@@ -143,6 +146,9 @@ class UI{
         this.fill_text('linker-script',configurations.loader_path);
         this.linker_output_flags(configurations.l_output_flags);
         this.fill_text('toolchain-path',configurations.toolchain_path);
+        this.fill_text('toolchain-gcc',configurations.bin_gcc);
+        this.fill_text('toolchain-objcpy',configurations.bin_objcpy);
+        this.fill_text('toolchain-size',configurations.bin_size);
     }
 
     refresh_configuration_list(name)

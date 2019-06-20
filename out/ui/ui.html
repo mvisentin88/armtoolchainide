@@ -143,7 +143,7 @@
             color: var(--vscode-settings-textInputForeground);
             background: var(--vscode-settings-textInputBackground);
             border: 1px solid var(--vscode-settings-textInputBorder);
-            resize: none;
+            resize: vertical;
         }
 
         select {
@@ -317,6 +317,7 @@
             font-family: sans-serif;
             color:  var(--vscode-settings-dropdownForeground);
             background: var(--vscode-settings-dropdownBackground);
+            resize:none;
         }
 
         .select-editable select:focus,
@@ -544,6 +545,18 @@
         <div class="section">
             <div class="section-text">path:</div>
             <textarea id="toolchain-path" rows="1" style="width: 800px"></textarea>
+        </div>
+        <div class="section">
+            <div class="section-text">bin gcc name:</div>
+            <textarea id="toolchain-gcc" rows="1" style="width: 800px"></textarea>
+        </div>
+        <div class="section">
+            <div class="section-text">bin objcopy name:</div>
+            <textarea id="toolchain-objcpy" rows="1" style="width: 800px"></textarea>
+        </div>
+        <div class="section">
+            <div class="section-text">bin size name:</div>
+            <textarea id="toolchain-size" rows="1" style="width: 800px"></textarea>
         </div>
         <script src="{{root}}/out/ui/ui.js">
 

@@ -25,6 +25,9 @@ class GCC {
                     exclude_paths: [""],
                     exclude_files: [""],
                     toolchain_path: "",
+                    bin_gcc: "arm-none-eabi-gcc",
+                    bin_objcpy: "arm-none-eabi-objcopy",
+                    bin_size: "arm-none-eabi-size"
                 }
             ]
         };
@@ -154,14 +157,17 @@ class GCC {
         }
         this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].l_output_flags, "-");
         this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].l_library, "-L");
-        var linker_cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -o ", this.target_folder + "/" + prj_name + ".elf", this.compiled_file, this.flags, "-T" + loader_file, "-Wl,-Map=" + this.target_folder + "/" + prj_name + ".map", this.output_flags);
+        let cmd_path = path.join(this.file_conf.configurations[build_selected].toolchain_path, this.file_conf.configurations[build_selected].bin_gcc);
+        var linker_cmd = this.generate_cmd(cmd_path + " -o ", this.target_folder + "/" + prj_name + ".elf", this.compiled_file, this.flags, "-T" + loader_file, "-Wl,-Map=" + this.target_folder + "/" + prj_name + ".map", this.output_flags);
+        cmd_path = path.join(this.file_conf.configurations[build_selected].toolchain_path, this.file_conf.configurations[build_selected].bin_objcpy);
         if (this.to_be_build || clean) {
             this.append_cmd(linker_cmd);
             this.append_cmd("echo Generate bin..");
-            this.append_cmd("arm-none-eabi-objcopy -S -O binary " + this.target_folder + "/" + prj_name + ".elf " + this.target_folder + "/" + prj_name + ".bin");
+            this.append_cmd(cmd_path + " -S -O binary " + this.target_folder + "/" + prj_name + ".elf " + this.target_folder + "/" + prj_name + ".bin");
         }
+        cmd_path = path.join(this.file_conf.configurations[build_selected].toolchain_path, this.file_conf.configurations[build_selected].bin_size);
         this.append_cmd("echo Print size info..");
-        this.append_cmd("arm-none-eabi-size " + this.target_folder + "/" + prj_name + ".elf");
+        this.append_cmd(cmd_path + " " + this.target_folder + "/" + prj_name + ".elf");
         this.append_cmd("END_TIME=$(($(date +%s)))");
         this.append_cmd("echo Build Time : $(($END_TIME - $START_TIME)) s");
         fs.writeFileSync(this.target_folder + "/compile.sh", this.bash_cmd);
@@ -189,17 +195,18 @@ class GCC {
             this.input = url + "/" + item;
             this.output = target_url + "/" + path.parse(this.input).name + ".o";
             var cmd = "";
+            let cmd_path = path.join(this.file_conf.configurations[build_selected].toolchain_path, this.file_conf.configurations[build_selected].bin_gcc);
             if (path.parse(item).ext === ".c") {
                 this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].c_output_flags, "-");
                 this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].c_defines, "-D");
                 this.include_paths = this.concat_arr_string(this.file_conf.configurations[build_selected].c_include_paths, "-I");
-                cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -c ", this.input, this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output);
+                cmd = this.generate_cmd(cmd_path + " -c ", this.input, this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output);
             }
             else if (path.parse(item).ext === ".s") {
                 this.output_flags = this.concat_arr_string(this.file_conf.configurations[build_selected].a_output_flags, "-");
                 this.include_paths = this.concat_arr_string(this.file_conf.configurations[build_selected].a_include_paths, "-I");
                 this.defines = this.concat_arr_string(this.file_conf.configurations[build_selected].a_defines, "-D");
-                cmd = this.generate_cmd(this.file_conf.configurations[build_selected].toolchain_path + " -c ", this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output, this.input);
+                cmd = this.generate_cmd(cmd_path + " -c ", this.flags, this.defines, this.include_paths, this.output_flags, " -o ", this.output, this.input);
             }
             else {
                 continue;
